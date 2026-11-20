@@ -1,0 +1,27 @@
+{
+  "schema": "finalverse.map-server-config/1",
+  "listen": {"host": "127.0.0.1", "port": 0},
+  "state_dir": "/ABSOLUTE/PRIVATE/STATE/DIR",
+  "tokens": "/ABSOLUTE/PRIVATE/tokens.json",
+  "backend": {
+    "mapserv": "/ABSOLUTE/PATH/TO/mapserv",
+    "env": {"PROJ_DATA": "/ABSOLUTE/PREFIX/share/proj"},
+    "timeout_ms": 10000,
+    "max_concurrency": 4
+  },
+  "limits": {"worker_threads": 8, "rate_per_second": 50, "burst": 100},
+  "cache": {"max_bytes": 67108864, "max_entries": 4096},
+  "datasets": [{
+    "id": "montreal",
+    "title": "Montreal Old Port reference",
+    "crs": "EPSG:2950",
+    "extent": [300489.334946641, 5040679.30754108, 300749.334946641, 5040939.30754108],
+    "allowed_crs": ["EPSG:2950", "EPSG:4326", "EPSG:3857"],
+    "attribution": "Ville de Montreal CC-BY-4.0; NRCan OGL-Canada-2.0",
+    "layers": [
+      {"name": "terrain", "type": "raster", "source": "/ABSOLUTE/montreal/dtm.tif", "crs": "EPSG:3979"},
+      {"name": "roofs", "type": "polygon", "source": "/ABSOLUTE/montreal/buildings.geojson", "source_layer": "buildings", "crs": "EPSG:2950", "color": [188, 128, 87], "outline": [73, 63, 59]},
+      {"name": "roads", "type": "line", "source": "/ABSOLUTE/montreal/roads.geojson", "source_layer": "roads", "crs": "EPSG:4326", "color": [36, 132, 155], "width": 2}
+    ]
+  }]
+}
