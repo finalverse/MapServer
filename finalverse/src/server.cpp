@@ -1,6 +1,7 @@
 #include "server.hpp"
 
 #include <arpa/inet.h>
+#include <cmath>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
@@ -370,7 +371,8 @@ HttpResponse Service::route(const HttpRequest &r, std::string &route_name, std::
       std::map<std::string, std::string> q;
       for (auto p : *params) {
         std::string k = p.key.decode();
-        if (k != "after" && k != "after_hash" && k != "limit") throw Error(400, "unsupported_parameter", "parameter is not accepted: " + k);
+        if (k != "after" && k != "after_hash" && k != "limit" && k != "x" && k != "y" && k != "radius")
+          throw Error(400, "unsupported_parameter", "parameter is not accepted: " + k);
         if (!q.emplace(k, p.value.decode()).second) throw Error(400, "duplicate_parameter", "parameter repeated");
       }
       if (parts.size() == 3) {
@@ -380,6 +382,22 @@ HttpResponse Service::route(const HttpRequest &r, std::string &route_name, std::
       if (parts.size() == 4 && parts[3] == "snapshot") {
         route_name = "world_snapshot";
         return json_response(200, worlds_->snapshot(wid));
+      }
+      if (parts.size() == 4 && parts[3] == "nearby") {
+        route_name = "world_nearby";
+        auto num = [&](const char *k) {
+          if (!q.contains(k)) throw Error(400, "missing_parameter", std::string(k) + " is required");
+          std::size_t used = 0;
+          double v = 0;
+          try { v = std::stod(q[k], &used); } catch (...) { used = 0; }
+          if (used != q[k].size() || !std::isfinite(v)) throw Error(400, "invalid_parameter", std::string(k) + " must be a finite number");
+          return v;
+        };
+        double radius = num("radius");
+        if (radius <= 0 || radius > 1000) throw Error(400, "invalid_parameter", "radius must be in (0, 1000] metres");
+        uint64_t limit = q.contains("limit") ? parse_u64(q["limit"], "limit") : 16;
+        if (limit < 1 || limit > 256) throw Error(400, "invalid_parameter", "limit must be 1..256");
+        return json_response(200, worlds_->nearby(wid, num("x"), num("y"), radius, static_cast<uint32_t>(limit)));
       }
       if (parts.size() == 4 && parts[3] == "registration") {
         route_name = "world_registration";

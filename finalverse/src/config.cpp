@@ -179,14 +179,16 @@ Config parse_config(const json::value &root) {
     std::set<std::string> wids;
     for (auto &wv : it->value().as_array()) {
       const auto &w = as_object(wv, "world");
-      reject_unknown(w, {"id", "title", "dataset", "store", "registration"}, "world");
+      reject_unknown(w, {"id", "title", "dataset", "store", "live", "registration"}, "world");
       WorldConfig wc;
       wc.id = get_string(w, "id");
       if (!valid_identifier(wc.id) || !wids.insert(wc.id).second) throw std::runtime_error("invalid or duplicate world id");
       wc.title = opt_string(w, "title").value_or(wc.id);
       wc.dataset = opt_string(w, "dataset").value_or("");
       if (!wc.dataset.empty() && !ids.contains(wc.dataset)) throw std::runtime_error("world references an unknown dataset");
-      wc.store = absolute_path(w, "store");
+      if (w.contains("live") == w.contains("store")) throw std::runtime_error("a world has exactly one of store or live");
+      if (w.contains("live")) wc.live_tokens = absolute_path(w, "live");
+      else wc.store = absolute_path(w, "store");
       if (w.contains("registration")) wc.registration = absolute_path(w, "registration");
       c.worlds.push_back(std::move(wc));
     }

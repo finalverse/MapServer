@@ -35,7 +35,8 @@ struct DatasetConfig {
 
 struct WorldConfig {
   std::string id, title, dataset;
-  fs::path store;  // MutSea region store, opened read-only
+  fs::path store;  // MutSea region store, opened read-only (offline projection)
+  std::optional<fs::path> live_tokens;  // Ω-XVII.3: subscribe to the authority's live replication instead
   std::optional<fs::path> registration;
 };
 

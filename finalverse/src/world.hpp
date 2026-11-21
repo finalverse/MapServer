@@ -24,10 +24,14 @@ class WorldService {
   // Same events as concatenated FVP frames (application/x-finalverse-fvp).
   std::string events_fvp(const std::string &id, uint64_t after_seq, const std::string &after_hash, uint32_t limit);
   json::object registration(const std::string &id);
+  // Ω-XVII.3 live worlds: authoritative entities within `radius` metres (region-local) of (x, y).
+  json::object nearby(const std::string &id, double x, double y, double radius, uint32_t limit);
   const WorldConfig *find(const std::string &id) const;
 
+ public:
+  struct World;  // defined in world.cpp
+
  private:
-  struct World;
   [[maybe_unused]] const Config &config_;
   std::vector<std::unique_ptr<World>> worlds_;
   World &get(const std::string &id);
